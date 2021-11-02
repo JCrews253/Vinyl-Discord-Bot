@@ -1,5 +1,9 @@
 ﻿using DSharpPlus;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
+using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace DiscordBot
@@ -13,11 +17,23 @@ namespace DiscordBot
 
     static async Task MainAsync()
     {
+      var json = string.Empty;
+
+      using(var fs = File.OpenRead("config.json"))
+      using(var sr = new StreamReader(fs, new UTF8Encoding(false)))
+      {
+        json = await sr.ReadToEndAsync();
+      }
+
+      var config = JsonConvert.DeserializeObject<Config>(json);
+
       var discord = new DiscordClient(new DiscordConfiguration()
       {
-        Token = "NzczNzIxMTI1ODcxODEyNjIy.X6NV8w.G20JhtiqCbYeiVKNQ8yk6aei0aY",
+        Token = config.Token,
         TokenType = TokenType.Bot,
-        Intents = DiscordIntents.AllUnprivileged
+        AutoReconnect = true,
+        Intents = DiscordIntents.AllUnprivileged,
+        
       });
 
       discord.MessageCreated += async (s, e) =>
