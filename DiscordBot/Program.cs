@@ -1,15 +1,22 @@
-﻿using DSharpPlus;
+﻿using DiscordBot.Commands;
+using DSharpPlus;
+using DSharpPlus.CommandsNext;
+using DSharpPlus.Net;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using DSharpPlus.Lavalink;
+using DiscordBot.Configs;
 
 namespace DiscordBot
 {
-  class Program
+  public class Program
   {
+    private static Config _config;
+    private static DiscordClient _client;
+    private static CommandsNextExtension _commands;
+
     static void Main(string[] args)
     {
       MainAsync().GetAwaiter().GetResult();
@@ -17,34 +24,56 @@ namespace DiscordBot
 
     static async Task MainAsync()
     {
-      var json = string.Empty;
-
-      using(var fs = File.OpenRead("config.json"))
+      // Read config file
+      using(var fs = File.OpenRead(@"Configs\config.json"))
       using(var sr = new StreamReader(fs, new UTF8Encoding(false)))
       {
-        json = await sr.ReadToEndAsync();
+        var json = await sr.ReadToEndAsync();
+        _config = JsonConvert.DeserializeObject<Config>(json);
       }
 
-      var config = JsonConvert.DeserializeObject<Config>(json);
-
-      var discord = new DiscordClient(new DiscordConfiguration()
+      // Create discord client
+      _client = new DiscordClient(new DiscordConfiguration()
       {
-        Token = config.Token,
+        Token = _config.Token,
         TokenType = TokenType.Bot,
         AutoReconnect = true,
-        Intents = DiscordIntents.AllUnprivileged,
-        
+        Intents = DiscordIntents.AllUnprivileged    
       });
 
-      discord.MessageCreated += async (s, e) =>
+      var commmandConfig = new CommandsNextConfiguration
       {
-        if (e.Message.Content.ToLower().StartsWith("ping"))
-          await e.Message.RespondAsync("pong!");
+        StringPrefixes = new[] { _config.Prefix }
+      };
+      _commands = _client.UseCommandsNext(commmandConfig);
 
+      var endpoint = new ConnectionEndpoint
+      {
+        Hostname = "127.0.0.1", 
+        Port = 2333 
       };
 
-      await discord.ConnectAsync();
+      var lavalinkConfig = new DSharpPlus.Lavalink.LavalinkConfiguration
+      {
+        Password = "youshallnotpass",
+        RestEndpoint = endpoint,
+        SocketEndpoint = endpoint
+      };
+
+      var lavalink = _client.UseLavalink();
+
+      RegisterCommands();
+
+      await _client.ConnectAsync();
+      await lavalink.ConnectAsync(lavalinkConfig);
       await Task.Delay(-1);
+    }
+
+    static void RegisterCommands()
+    {
+      _commands.RegisterCommands<PingCommand>();
+      _commands.RegisterCommands<MusicCommands>();
+      _commands.RegisterCommands<ChatCommands>();
     }
   }
 }
