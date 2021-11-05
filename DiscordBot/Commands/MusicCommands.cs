@@ -15,9 +15,10 @@ namespace DiscordBot.Commands
   [LavaConnection]
   public class MusicCommands : BaseCommandModule
   {
-    private List<LavalinkTrack> _queue = new List<LavalinkTrack>();
+    private Dictionary<ulong, List<LavalinkTrack>> _queue = new Dictionary<ulong, List<LavalinkTrack>>();
 
     [Command]
+    [Description("Pauses the current track.")]
     public async Task Pause(CommandContext context)
     {
       var lava = LavaUtility.GetLavaConnections(context);
@@ -32,6 +33,7 @@ namespace DiscordBot.Commands
     }
 
     [Command]
+    [Description("Plays a song by search request or URL.")]
     public async Task Play(CommandContext context, [RemainingText] string request = "")
     {
       var lava = LavaUtility.GetLavaConnections(context);
@@ -57,7 +59,8 @@ namespace DiscordBot.Commands
 
       if (lava.guildConnection.CurrentState.CurrentTrack != null)
       {
-        _queue.Add(track);
+        _queue.TryAdd(lava.guildConnection.Guild.Id, new List<LavalinkTrack>());
+        _queue[lava.guildConnection.Guild.Id].Add(track);
         await context.RespondAsync($"Add {track.Title} to queue.");
         lava.guildConnection.PlaybackFinished -= PlayNext;
         lava.guildConnection.PlaybackFinished += PlayNext;
@@ -69,22 +72,22 @@ namespace DiscordBot.Commands
       }
     }
 
-    private async Task PlayNext(LavalinkGuildConnection guild, TrackFinishEventArgs e)
+    [Command]
+    [Description("Resumes the current track.")]
+    public async Task Resume(CommandContext context) 
     {
-      if (_queue.Count() > 0)
-      {
-        var track = _queue.First();
-        await guild.PlayAsync(track);
-        _queue.RemoveAt(0);
-      }
+      var lava = LavaUtility.GetLavaConnections(context);
+      await lava.guildConnection.ResumeAsync();
     }
 
     [Command]
+    [Description("Returns the current queue of songs.")]
     public async Task Queue(CommandContext context)
     {
-      if (_queue.Count() > 0)
+
+      if (_queue.TryGetValue(context.Guild.Id, out var queue) && queue.Count() > 0)
       {
-        await context.RespondAsync(string.Join('\n', _queue.Select(s => s.Title).ToArray()));
+        await context.RespondAsync(string.Join('\n', queue.Select(s => s.Title).ToArray()));
       }
       else
       {
@@ -93,6 +96,7 @@ namespace DiscordBot.Commands
     }
 
     [Command]
+    [Description("Skips the current track.")]
     public async Task Skip(CommandContext context)
     {
       var lava = LavaUtility.GetLavaConnections(context);
@@ -100,6 +104,7 @@ namespace DiscordBot.Commands
     }
 
     [Command]
+    [Description("Stops Vinyl and clears the queue.")]
     public async Task Stop(CommandContext context)
     {
       var lava = LavaUtility.GetLavaConnections(context);
@@ -108,12 +113,47 @@ namespace DiscordBot.Commands
     }
 
     [Command]
+    [Description("Returns the current playback position and track length.")]
     public async Task Time(CommandContext context)
     {
       var lava = LavaUtility.GetLavaConnections(context);
       var length = lava.guildConnection.CurrentState.CurrentTrack.Length;
       var position = lava.guildConnection.CurrentState.PlaybackPosition;
       await context.RespondAsync($"{position.ToString("hh\\:mm\\:ss")}/{length.ToString("hh\\:mm\\:ss")}");
+    }
+
+    [Command]
+    [Description("Sets Vinyl's volume from a given value between 5 and 100.")]
+    public async Task Volume(CommandContext context, int value)
+    {   
+      if (value < 5)
+      {
+        await context.RespondAsync("Volume must be greater than or equal to 5.");
+        return;
+      }
+      else if(value > 100)
+      {
+        await context.RespondAsync("Volume must be less than or equal to 100.");
+        return;
+      }
+
+      var lava = LavaUtility.GetLavaConnections(context);
+      await lava.guildConnection.SetVolumeAsync(value);
+      await context.RespondAsync($"Volume set to {value}");
+    }
+
+    private async Task PlayNext(LavalinkGuildConnection guild, TrackFinishEventArgs e)
+    {
+      if (_queue.TryGetValue(guild.Guild.Id, out var queue) && queue.Count() > 0)
+      {
+        var track = queue.First();
+        await guild.PlayAsync(track);
+        queue.RemoveAt(0);
+      }
+      else
+      {
+        await guild.DisconnectAsync();
+      }
     }
   }
 }

@@ -17,12 +17,7 @@ namespace DiscordBot
     private static DiscordClient _client;
     private static CommandsNextExtension _commands;
 
-    static void Main(string[] args)
-    {
-      MainAsync().GetAwaiter().GetResult();
-    }
-
-    static async Task MainAsync()
+    static async Task Main(string[] args)
     {
       // Read config file
       using(var fs = File.OpenRead(@"Configs\config.json"))
@@ -47,25 +42,12 @@ namespace DiscordBot
       };
       _commands = _client.UseCommandsNext(commmandConfig);
 
-      var endpoint = new ConnectionEndpoint
-      {
-        Hostname = "127.0.0.1", 
-        Port = 2333 
-      };
-
-      var lavalinkConfig = new DSharpPlus.Lavalink.LavalinkConfiguration
-      {
-        Password = "youshallnotpass",
-        RestEndpoint = endpoint,
-        SocketEndpoint = endpoint
-      };
-
-      var lavalink = _client.UseLavalink();
+      var lava = _client.UseLavalink();
 
       RegisterCommands();
 
       await _client.ConnectAsync();
-      await lavalink.ConnectAsync(lavalinkConfig);
+      await ConnectLavaNode(lava);
       await Task.Delay(-1);
     }
 
@@ -74,6 +56,23 @@ namespace DiscordBot
       _commands.RegisterCommands<PingCommand>();
       _commands.RegisterCommands<MusicCommands>();
       _commands.RegisterCommands<ChatCommands>();
+    }
+
+    public static async Task ConnectLavaNode(LavalinkExtension lava)
+    {
+      var lavaEndpoint = new ConnectionEndpoint
+      {
+        Hostname = "127.0.0.1",
+        Port = 2333
+      };
+
+      var lavalinkConfig = new DSharpPlus.Lavalink.LavalinkConfiguration
+      {
+        Password = "youshallnotpass",
+        RestEndpoint = lavaEndpoint,
+        SocketEndpoint = lavaEndpoint
+      };
+      await lava.ConnectAsync(lavalinkConfig);
     }
   }
 }

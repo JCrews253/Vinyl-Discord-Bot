@@ -1,10 +1,7 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Lavalink;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DiscordBot.Attributes
@@ -16,8 +13,13 @@ namespace DiscordBot.Attributes
       var lava = context.Client.GetLavalink();
       if (!lava.ConnectedNodes.Any())
       {
-        await context.RespondAsync("No lava link connection");
-        return false;
+        await context.RespondAsync("Attemping to start Lavalink...");
+        await Program.ConnectLavaNode(lava);
+        if (!lava.ConnectedNodes.Any())
+        {
+          await context.RespondAsync("Lavalink failed to start.");
+          return false;
+        }  
       }
 
       var node = lava.ConnectedNodes.Values.First();
