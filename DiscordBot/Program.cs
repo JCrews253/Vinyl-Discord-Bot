@@ -8,6 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using DSharpPlus.Lavalink;
 using DiscordBot.Configs;
+using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
+using System.Diagnostics;
 
 namespace DiscordBot
 {
@@ -19,6 +22,7 @@ namespace DiscordBot
 
     static async Task Main(string[] args)
     {
+      StartLavalink();
       // Read config file
       using(var fs = File.OpenRead(@"Configs\config.json"))
       using(var sr = new StreamReader(fs, new UTF8Encoding(false)))
@@ -46,6 +50,7 @@ namespace DiscordBot
 
       RegisterCommands();
 
+      _client.Ready += SetStatus;
       await _client.ConnectAsync();
       await ConnectLavaNode(lava);
       await Task.Delay(-1);
@@ -73,6 +78,22 @@ namespace DiscordBot
         SocketEndpoint = lavaEndpoint
       };
       await lava.ConnectAsync(lavalinkConfig);
+    }
+
+    static async Task SetStatus(DiscordClient client, ReadyEventArgs e)
+    {
+      await client.UpdateStatusAsync(activity: new DiscordActivity(".help"));
+    }
+
+    static void StartLavalink()
+    {
+      string path = Directory.GetCurrentDirectory();
+      path += "Lavalink.jar";
+      var lavaLink = new Process();
+      lavaLink.StartInfo.UseShellExecute = true;
+      lavaLink.StartInfo.FileName = "Lavalink.jar";
+      lavaLink.StartInfo.Arguments = $"-jar {path}";
+      lavaLink.Start();
     }
   }
 }
