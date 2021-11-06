@@ -62,14 +62,14 @@ namespace DiscordBot.Commands
         _queue.TryAdd(lava.guildConnection.Guild.Id, new List<LavalinkTrack>());
         _queue[lava.guildConnection.Guild.Id].Add(track);
         await context.RespondAsync($"Add {track.Title} to queue.");
-        lava.guildConnection.PlaybackFinished -= PlayNext;
-        lava.guildConnection.PlaybackFinished += PlayNext;
       }
       else
       {
         await lava.guildConnection.PlayAsync(track);
         await context.RespondAsync($"Now playing {track.Title}!");
       }
+      lava.guildConnection.PlaybackFinished -= PlayNext;
+      lava.guildConnection.PlaybackFinished += PlayNext;
     }
 
     [Command]
