@@ -18,6 +18,20 @@ namespace DiscordBot.Commands
     private Dictionary<ulong, List<LavalinkTrack>> _queue = new Dictionary<ulong, List<LavalinkTrack>>();
 
     [Command]
+    [Description("Gets the name of the current track.")]
+    [Aliases("Current")]
+    public async Task NowPlaying(CommandContext context)
+    {
+      var lava = LavaUtility.GetLavaConnections(context);
+      if(lava.guildConnection.CurrentState.CurrentTrack == null)
+      {
+        await context.RespondAsync("Nothing is currently playing.");
+        return;
+      }
+      await context.RespondAsync($"Current track: {lava.guildConnection.CurrentState.CurrentTrack.Title}");
+    }
+
+    [Command]
     [Description("Pauses the current track.")]
     public async Task Pause(CommandContext context)
     {
