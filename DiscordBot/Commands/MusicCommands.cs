@@ -111,6 +111,7 @@ namespace DiscordBot.Commands
 
     [Command]
     [Description("Skips the current track.")]
+    [Aliases("fs")]
     public async Task Skip(CommandContext context)
     {
       var lava = LavaUtility.GetLavaConnections(context);

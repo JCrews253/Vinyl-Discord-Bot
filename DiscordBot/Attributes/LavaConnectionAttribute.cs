@@ -1,4 +1,5 @@
-﻿using DSharpPlus.CommandsNext;
+﻿using DiscordBot.Utilities;
+using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Lavalink;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace DiscordBot.Attributes
       if (!lava.ConnectedNodes.Any())
       {
         await context.RespondAsync("Attemping to start Lavalink...");
-        await Program.ConnectLavaNode(lava);
+        await LavaUtility.ConnectLavaNode(lava);
         if (!lava.ConnectedNodes.Any())
         {
           await context.RespondAsync("Lavalink failed to start.");
