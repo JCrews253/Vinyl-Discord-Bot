@@ -10,6 +10,8 @@ using DiscordBot.Configs;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DiscordBot.Utilities;
+using System.Diagnostics;
+using Vinyl.Commands;
 
 namespace DiscordBot
 {
@@ -22,7 +24,7 @@ namespace DiscordBot
       await LavaUtility.StartLavalink();
 
       // Read config file
-      using(var fs = File.OpenRead(@"Configs\config.json"))
+      using(var fs = File.OpenRead(@"Configs/config.json"))
       using(var sr = new StreamReader(fs, new UTF8Encoding(false)))
       {
         var json = await sr.ReadToEndAsync();
@@ -32,7 +34,7 @@ namespace DiscordBot
       // Create discord client
       var client = new DiscordClient(new DiscordConfiguration()
       {
-        Token = _config.Token,
+        Token = Debugger.IsAttached ? _config.DevToken : _config.Token,
         TokenType = TokenType.Bot,
         AutoReconnect = true,
         Intents = DiscordIntents.AllUnprivileged    
@@ -40,7 +42,7 @@ namespace DiscordBot
 
       var commmandConfig = new CommandsNextConfiguration
       {
-        StringPrefixes = new[] { _config.Prefix }
+        StringPrefixes = new[] { Debugger.IsAttached ? _config.DevPrefix : _config.Prefix }
       };
       var commands = client.UseCommandsNext(commmandConfig);
 
@@ -49,6 +51,7 @@ namespace DiscordBot
       commands.RegisterCommands<PingCommand>();
       commands.RegisterCommands<MusicCommands>();
       commands.RegisterCommands<ChatCommands>();
+      commands.RegisterCommands<PlexCommands>();
 
       client.Ready += SetStatus;
       await client.ConnectAsync();
@@ -58,7 +61,8 @@ namespace DiscordBot
 
     static async Task SetStatus(DiscordClient client, ReadyEventArgs e)
     {
-      await client.UpdateStatusAsync(activity: new DiscordActivity(".help"));
+      var prefix = Debugger.IsAttached ? _config.DevPrefix : _config.Prefix;
+      await client.UpdateStatusAsync(activity: new DiscordActivity($"{prefix}help"));
     }
   }
 }

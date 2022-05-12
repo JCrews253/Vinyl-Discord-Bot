@@ -1,6 +1,7 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.Lavalink;
 using DSharpPlus.Net;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -24,12 +25,13 @@ namespace DiscordBot.Utilities
     public static async Task StartLavalink()
     {
       string path = Directory.GetCurrentDirectory();
-      path += "\\Lavalink.jar";
+      path += "/Lavalink.jar";
       var lavaLink = new Process();
       lavaLink.StartInfo.UseShellExecute = false;
       lavaLink.StartInfo.FileName = "java";
       lavaLink.StartInfo.Arguments = $"-jar {path}";
-      lavaLink.Start();
+      //lavaLink.Start();
+
 
       // Wait for Lavalink to start.
       await Task.Delay(10000);
@@ -39,8 +41,8 @@ namespace DiscordBot.Utilities
     {
       var lavaEndpoint = new ConnectionEndpoint
       {
-        Hostname = "127.0.0.1",
-        Port = 2333
+        Hostname = "lavalink",
+        Port = 443,
       };
 
       var lavalinkConfig = new LavalinkConfiguration

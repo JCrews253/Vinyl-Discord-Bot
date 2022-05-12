@@ -16,7 +16,7 @@ namespace DiscordBot.Commands
       List<DiscordMessage> messagesToDelete = new List<DiscordMessage>();
       foreach (var message in messages)
       {
-        if (message.Content.StartsWith(".") || message.Author.IsBot)
+        if (message.Content.StartsWith(".") || message.Content.StartsWith("?.") || message.Author.IsBot)
         {
           messagesToDelete.Add(message);
         }
@@ -26,7 +26,7 @@ namespace DiscordBot.Commands
     }
 
     [Command]
-    [Aliases("VinylInviteLink")]
+    [Aliases("VinylInviteLink","invite")]
     [Description("Url to add Vinyl to your discord server.")]
     public async Task BotInviteLink(CommandContext context)
     {

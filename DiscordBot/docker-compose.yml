@@ -1,0 +1,27 @@
+version: "3.4"
+      
+services:
+  lavalink:
+    build: 
+      context: .
+      dockerfile: dockerfile_lavalink
+    ports: 
+      - "44364:443"
+    networks:
+      - local
+
+  bot:
+    build: 
+      context: .
+      dockerfile: dockerfile_vinyl
+    image: mydiscordbot
+    depends_on: 
+      - lavalink
+    ports:
+      - "44359:443"
+    networks:
+      - local
+
+networks:
+  local:
+    driver: bridge
